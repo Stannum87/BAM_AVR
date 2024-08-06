@@ -138,7 +138,7 @@ int main(void)
 		
 		
 		
-		Luma = 1; // set brightness using this variable
+		Luma = 1; // set brightness using this variable //////////////////////////////////////////////////////////////////////////////////
 		sei();
 		OCR3A = 5100;
 		OCR1A = 50000; // luma++ every 3 msec. for 60000
