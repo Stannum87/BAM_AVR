@@ -4,6 +4,7 @@
  * Created: 19-Mar-24 8:50:12 PM
  * Author : sadeed
  */ 
+
 #define F_CPU 20000000UL
 #include <avr/io.h>
 #include <util/delay.h>
@@ -61,7 +62,11 @@ void delay_us(uint16_t n) {
 //	TCNT3 = 0;
 	while (n--)
 	{
-		_delay_us(0.1);
+		//_delay_us(0.1);
+		asm volatile (
+		"    rjmp 1f	\n"
+		"1:	\n"
+		);
 	}
 //	TCNT3 = 0;
 //	sei();
@@ -128,7 +133,7 @@ void Set_BAM(int SLuma, volatile unsigned char *SPortLetter, unsigned char SPort
 
 int main(void)
 {
-    DDRD =0xff;
+    DDRA =0xff;
 	
 
 	//BAM(11);
@@ -138,14 +143,14 @@ int main(void)
 		
 		
 		
-		Luma = 1; // set brightness using this variable //////////////////////////////////////////////////////////////////////////////////
+		Luma = 255; // set brightness using this variable //////////////////////////////////////////////////////////////////////////////////
 		sei();
 		OCR3A = 5100;
 		OCR1A = 50000; // luma++ every 3 msec. for 60000
 		
 //		PortLetter = &PORTD;
 //		PortBit = PIND1;
-		Set_BAM(Luma,&PORTD,PIND0);
+		Set_BAM(Luma,&PORTA,PINA0);
 //		BAM(Luma,PortLetter,PortBit); // to call func. and set
 		unsigned long int n =0;
     while (1) 
