@@ -4,7 +4,6 @@
  * Created: 19-Mar-24 8:50:12 PM
  * Author : sadeed
  */ 
-
 #define F_CPU 20000000UL
 #include <avr/io.h>
 #include <util/delay.h>
@@ -23,43 +22,10 @@ volatile int i = 0;
 volatile unsigned char *PortLetter;
 unsigned char PortBit;
 
-void FadeIn_out()
-{
-//	cli();
-	
-if (n1>2)
-{
-
-		if (i>=1)
-		{
-			Luma--;
-			if (Luma<=1)
-			{
-				i=0;
-			}
-			
-		}
-		
-		if (i<=0)
-		{
-			Luma++;
-			if (Luma>=255)
-			{
-				i=1;
-			}
-		}
-		
-		n1 =0;
-}
-n1++;
-	
-//	TCNT3 = 0;
-//	sei();
-}
-
+volatile uint8_t BAM_Flag = 0;
+ 
 void delay_us(uint16_t n) {
-//	cli();
-//	TCNT3 = 0;
+
 	while (n--)
 	{
 		//_delay_us(0.1);
@@ -68,21 +34,14 @@ void delay_us(uint16_t n) {
 		"1:	\n"
 		);
 	}
-//	TCNT3 = 0;
-//	sei();
-
 }
 
 void BAM(int Luma, volatile unsigned char *PortLetter, unsigned char PortBit)
 {
-//	cli();
 		int Luma_Buff = Luma;
 		int Fbit = 0;
 		int Pulse = 0;
-		
-		
- // if (BAM_E==1)
-//  { 
+
 	for (int n = 0; n<9; n++)
 	{
 		Fbit = Luma_Buff & 0x01;
@@ -101,27 +60,13 @@ void BAM(int Luma, volatile unsigned char *PortLetter, unsigned char PortBit)
 		}
 	 }
 	 
-// 	 c++;
-// 	 if (c>7)
-// 	 {
-// 		 c=0;
-// 		 
-// 	 }
-
-	//	BAM_E = 0;
-	//}
-	
-	
-//	sei();
 }
 
 void Timer3_init()
 {
 	TCCR3B |= 1<<WGM32 | 1<<CS30;
-	TCCR1B |= 1<<WGM12 | 1<<CS10;
 	
 	TIMSK3 |= 1<<OCIE3A;
-	TIMSK1 |= 1<<OCIE1A;
 }
 
 void Set_BAM(int SLuma, volatile unsigned char *SPortLetter, unsigned char SPortBit)
@@ -135,39 +80,26 @@ int main(void)
 {
     DDRA =0xff;
 	
-
-	//BAM(11);
 	Timer3_init();
-//		_delay_ms(500);
 		TCNT3 = 0;
-		
-		
-		
-		Luma = 255; // set brightness using this variable //////////////////////////////////////////////////////////////////////////////////
+		// Luma: 0 to 255
+		Luma = 10; // set brightness using this variable //////////////////////////////////////////////////////////////////////////////////
 		sei();
 		OCR3A = 5100;
-		OCR1A = 50000; // luma++ every 3 msec. for 60000
+
+		Set_BAM(Luma,&PORTA,PINA0); // for setting it for first time
 		
-//		PortLetter = &PORTD;
-//		PortBit = PIND1;
-		Set_BAM(Luma,&PORTA,PINA0);
+		
 //		BAM(Luma,PortLetter,PortBit); // to call func. and set
-		unsigned long int n =0;
+
     while (1) 
     {
-//			_delay_us(70);
-	//	Luma++;	
-		// 	_delay_ms(1000);
-// 		while (n>10)
-// 		{
-// 			n++;
-// 		}
-// 		n=0;
-// 		
-// 			PORTD ^=0xff		
-
-		//PORTD = 0xff;
-	//	BAM(Luma,&PORTD,PIND1);
+// dont use _delay() function, it wont work, instead use interrupt based timer to increment Luma value
+		if (BAM_Flag == 1)
+		{
+			BAM(Luma,&PORTA,PINA0);
+			BAM_Flag = 0;
+		}
     }
 }
 
@@ -175,31 +107,8 @@ int main(void)
 
 ISR(TIMER3_COMPA_vect)
 {
-
-//	cli();
-
-//	BAM_E = 1;
-
-
-//Set_BAM(Luma,&PORTD,PIND1);
-	BAM(Luma,PortLetter,PortBit);
-
-
-	//FadeIn_out();
-//	Luma++;
-//	TCNT3 = 0;
-	
-	
-//	sei();
-//	OCR3A = 5100; //10240
+	BAM_Flag = 1;
 }
 
-// timer is not the issue for sudden brightness, timer is an issue
 
-ISR(TIMER1_COMPA_vect)
-{
-// 	_delay_ms(1000);
-// 	PORTD ^=0xff;
-	FadeIn_out();
-//	OCR1A = 40000;
-}
+
